@@ -1,23 +1,68 @@
-import logo from './logo.svg';
-import './App.css';
+import { BrowserRouter, Routes, Route } from "react-router-dom"
+import Nav from "./components/Nav.jsx"
+import Home from "./views/Home.jsx"
+import Carrito from "./views/Carrito.jsx"
+import Detalle from "./views/Detalle.jsx"
+import Footer from "./components/Footer.jsx"
+import { useState, useEffect } from "react"
+import MyContext from "./contexts/MyContext.jsx"
+
 
 function App() {
+
+  const [data, setData] = useState([]);
+  const [pedidoCarrito, setPedidoCarrito] = useState([]);
+  const [totalPedido, setTotalPedido] = useState(0);
+
+  async function getData() {
+
+    const res = await fetch("http://localhost:3000/pizzas.json")
+    const data = await res.json()
+    setData(data)
+  }
+
+  useEffect(() => {
+    getData()
+  }, [])
+
+  const agregarPizza = (objeto) => {
+
+    const index = pedidoCarrito.findIndex((pedido) => pedido.id === objeto.id)
+    setTotalPedido(totalPedido + objeto.price)
+
+    if (index > -1) {
+
+      pedidoCarrito[index].cantidad += 1;
+      setPedidoCarrito([...pedidoCarrito]);
+
+    }
+    else {
+
+      const pizzaSeleccionada = {
+        id: objeto.id, desc: objeto.desc, img: objeto.img,
+        name: objeto.name, price: objeto.price, ingredients: objeto.ingredients, cantidad: 1
+      }
+
+      setPedidoCarrito([...pedidoCarrito, pizzaSeleccionada])
+    }
+  }
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+
+      <MyContext.Provider value={{ data, pedidoCarrito, setPedidoCarrito, totalPedido, setTotalPedido, agregarPizza }}>
+        <BrowserRouter>
+          <Nav />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/pizza/:id" element={<Detalle />} />
+            <Route path="/carrito" element={<Carrito />} />
+          </Routes>
+          <Footer />
+        </BrowserRouter>
+        
+      </MyContext.Provider>
+      
     </div>
   );
 }
